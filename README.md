@@ -3,7 +3,7 @@
 This is an implementation of *Robots learn social skills: End-to-end learning of co-speech gesture generation for humanoid robots* ([Paper](https://arxiv.org/abs/1810.12541), [Project Page](https://sites.google.com/view/youngwoo-yoon/projects/co-speech-gesture-generation))
 
 The original paper used TED dataset, but, in this repository, we modified the code to use [Trinity Speech-Gesture Dataset](https://trinityspeechgesture.scss.tcd.ie/) for [GENEA Challenge 2020](https://genea-workshop.github.io/2020/).
-The model is also changed to estimate rotational matrices for upper-body joints instead of estimating Cartesian coordinates.
+The model is also changed to estimate rotation matrices for upper-body joints instead of estimating Cartesian coordinates.
   
 
 ## Environment
