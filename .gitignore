@@ -1,0 +1,10 @@
+__pycache__
+.pytest_cache
+.idea
+*.wav
+*.mp4
+*.bin
+*.sh
+*.json
+*.pt
+output/

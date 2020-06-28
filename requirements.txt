@@ -1,0 +1,9 @@
+torch>=1.1.0
+numpy
+scipy
+scikit-learn
+librosa
+lmdb
+fasttext
+configargparse
+pyarrow
