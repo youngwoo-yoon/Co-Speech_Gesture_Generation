@@ -157,7 +157,7 @@ def make_bvh(save_path, filename_prefix, poses):
     out_poses = np.zeros((n_poses, poses.shape[1]))
 
     for i in range(poses.shape[1]):
-        out_poses[:, i] = savgol_filter(poses[:, i], 15, 2)  # NOTE: smoothing on rotational matrices is not optimal
+        out_poses[:, i] = savgol_filter(poses[:, i], 15, 2)  # NOTE: smoothing on rotation matrices is not optimal
 
     # rotation matrix to euler angles
     out_poses = out_poses.reshape((out_poses.shape[0], -1, 9))

@@ -56,9 +56,9 @@ def process_bvh(gesture_filename):
 
 
 def make_lmdb_gesture_dataset(base_path):
-    gesture_path = os.path.join(base_path, 'BVH_60fps')
-    audio_path = os.path.join(base_path, 'AudioMic')
-    text_path = os.path.join(base_path, 'transcriptions')
+    gesture_path = os.path.join(base_path, 'Motion')
+    audio_path = os.path.join(base_path, 'Audio')
+    text_path = os.path.join(base_path, 'Transcripts')
     out_path = os.path.join(base_path, 'lmdb')
     if not os.path.exists(out_path):
         os.makedirs(out_path)
@@ -77,7 +77,6 @@ def make_lmdb_gesture_dataset(base_path):
     bvh_files = sorted(glob.glob(gesture_path + "/*.bvh"), key=os.path.getmtime)
     for v_i, bvh_file in enumerate(bvh_files):
         name = os.path.split(bvh_file)[1][:-4]
-        name = name.replace('_blender', '')
         print(name)
 
         # load skeletons and subtitles
@@ -94,7 +93,7 @@ def make_lmdb_gesture_dataset(base_path):
 
         # split
         if v_i % 10 == 0:
-            dataset_idx = 1  # test
+            dataset_idx = 1  # validation
         else:
             dataset_idx = 0  # train
 
