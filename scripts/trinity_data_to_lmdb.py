@@ -74,7 +74,7 @@ def make_lmdb_gesture_dataset(base_path):
             txn.drop(db[i].open_db())
 
     all_poses = []
-    bvh_files = sorted(glob.glob(gesture_path + "/*.bvh"), key=os.path.getmtime)
+    bvh_files = sorted(glob.glob(gesture_path + "/*.bvh"))
     for v_i, bvh_file in enumerate(bvh_files):
         name = os.path.split(bvh_file)[1][:-4]
         print(name)
