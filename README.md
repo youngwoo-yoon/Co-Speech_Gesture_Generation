@@ -17,7 +17,7 @@ The code was developed using python 3.6 on Ubuntu 18.04. Pytorch 1.3.1 was used,
     ```
 
 1. Download the FastText vectors from [here](https://fasttext.cc/docs/en/english-vectors.html) and put `crawl-300d-2M-subword.bin` to the resource folder (`PROJECT_ROOT/resource/crawl-300d-2M-subword.bin`). 
-You may use [the cache file](https://www.dropbox.com/s/ad58gf74o0ahrtk/vocab_cache.pkl?dl=0) instead of downloading the FastText vectors (> 5 GB). Put the cache file into the LMDB folder that will be created in the next step. The code automatically loads the cache file when it exists (see `build_vocab` function). 
+You may use [the cache file](https://www.dropbox.com/s/9voiyhcgkg632hc/vocab_cache.pkl?dl=0) instead of downloading the FastText vectors (> 5 GB). Put the cache file into the LMDB folder that will be created in the next step. The code automatically loads the cache file when it exists (see `build_vocab` function). 
 
 1. Make LMDB
     ```
@@ -32,8 +32,11 @@ You may use [the cache file](https://www.dropbox.com/s/ad58gf74o0ahrtk/vocab_cac
 
 1. Inference
     ```
-    python inference.py [PATH_TO_MODEL]
+    python inference.py [PATH_TO_MODEL] [PATH_TO_AUDIO] [PATH_TO_TRANSCRIPT]
     ```
+   We share the model trained on the training set of the GENEA challenge 2020.
+[Click here to download](https://www.dropbox.com/s/ijxjvot1o4s76ww/baseline_icra19_checkpoint_100.bin?dl=0)   
+
 
 ## License
 

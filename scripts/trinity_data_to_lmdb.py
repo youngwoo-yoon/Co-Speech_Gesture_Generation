@@ -89,10 +89,10 @@ def make_lmdb_gesture_dataset(base_path):
 
         # process
         clips = [{'vid': name, 'clips': []},  # train
-                 {'vid': name, 'clips': []}]  # test
+                 {'vid': name, 'clips': []}]  # validation
 
         # split
-        if v_i % 10 == 0:
+        if v_i == 0:
             dataset_idx = 1  # validation
         else:
             dataset_idx = 0  # train

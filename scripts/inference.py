@@ -4,23 +4,19 @@ import pickle
 import pprint
 from pathlib import Path
 
-import lmdb
+import librosa
 import numpy as np
 import time
 
-import pyarrow
 import torch
 from scipy.signal import savgol_filter
 import joblib as jl
 
 import utils
-from data_loader.lmdb_data_loader import word_seq_collate_fn
-from pymo.parsers import BVHParser
-from pymo.data import Joint, MocapData
 from pymo.preprocessing import *
 from pymo.viz_tools import *
 from pymo.writers import *
-from trinity_data_to_lmdb import target_joints
+from utils.data_utils import SubtitleWrapper, normalize_string
 from utils.train_utils import set_logger
 
 from data_loader.data_preprocessor import DataPreprocessor
@@ -101,7 +97,7 @@ def generate_gestures(args, pose_decoder, lang_model, audio, words, audio_sr=160
     return out_poses
 
 
-def main(checkpoint_path):
+def main(checkpoint_path, audio_path, transcript_path):
     args, generator, loss_fn, lang_model, out_dim = utils.train_utils.load_checkpoint_and_model(
         checkpoint_path, device)
     pprint.pprint(vars(args))
@@ -113,39 +109,32 @@ def main(checkpoint_path):
     with open(vocab_cache_path, 'rb') as f:
         lang_model = pickle.load(f)
 
-    # do inference
-    n_results = 1
-    test_data_path = args.val_data_path[0]
-    lmdb_env = lmdb.open(test_data_path, readonly=True, lock=False)
+    # prepare input
+    transcript = SubtitleWrapper(transcript_path).get()
+    audio_raw, audio_sr = librosa.load(audio_path, mono=True, sr=16000, res_type='kaiser_fast')
 
-    with lmdb_env.begin(write=False) as txn:
-        keys = [key for key, _ in txn.cursor()]
-        n_saved = 0
-        while n_saved < n_results:  # loop until we get the desired number of results
-            buf = txn.get(keys[n_saved])
-            video = pyarrow.deserialize(buf)
-            vid = video['vid']
-            clips = video['clips']
+    word_list = []
+    for wi in range(len(transcript)):
+        word_s = float(transcript[wi]['start_time'][:-1])
+        word_e = float(transcript[wi]['end_time'][:-1])
+        word = transcript[wi]['word']
 
-            clip_idx = 0
-            clip_poses = clips[clip_idx]['poses']
-            clip_audio = clips[clip_idx]['audio_raw']
-            clip_words = clips[clip_idx]['words']
+        word = normalize_string(word)
+        if len(word) > 0:
+            word_list.append([word, word_s, word_e])
 
-            # inference
-            out_poses = generate_gestures(args, generator, lang_model, clip_audio, clip_words)
+    # inference
+    out_poses = generate_gestures(args, generator, lang_model, audio_raw, word_list)
 
-            # unnormalize
-            mean = np.array(args.data_mean).squeeze()
-            std = np.array(args.data_std).squeeze()
-            std = np.clip(std, a_min=0.01, a_max=None)
-            out_poses = np.multiply(out_poses, std) + mean
+    # unnormalize
+    mean = np.array(args.data_mean).squeeze()
+    std = np.array(args.data_std).squeeze()
+    std = np.clip(std, a_min=0.01, a_max=None)
+    out_poses = np.multiply(out_poses, std) + mean
 
-            # make a BVH
-            filename_prefix = '{}'.format(vid)
-            make_bvh(save_path, filename_prefix, out_poses)
-
-            n_saved += 1
+    # make a BVH
+    filename_prefix = '{}'.format(audio_path.stem)
+    make_bvh(save_path, filename_prefix, out_poses)
 
 
 def make_bvh(save_path, filename_prefix, poses):
@@ -177,6 +166,8 @@ def make_bvh(save_path, filename_prefix, poses):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("ckpt_path", type=Path)
+    parser.add_argument("audio_path", type=Path)
+    parser.add_argument("transcript_path", type=Path)
     args = parser.parse_args()
 
-    main(args.ckpt_path)
+    main(args.ckpt_path, args.audio_path, args.transcript_path)
