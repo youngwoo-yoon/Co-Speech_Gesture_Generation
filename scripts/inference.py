@@ -24,10 +24,9 @@ from data_loader.data_preprocessor import DataPreprocessor
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
-def generate_gestures(args, pose_decoder, lang_model, audio, words, audio_sr=16000,
-                      seed_seq=None):
+def generate_gestures(args, pose_decoder, lang_model, words, seed_seq=None):
     out_list = []
-    clip_length = len(audio) / audio_sr
+    clip_length = words[-1][2]
 
     # pre seq
     pre_seq = torch.zeros((1, args.n_pre_poses, pose_decoder.pose_dim))
@@ -97,7 +96,7 @@ def generate_gestures(args, pose_decoder, lang_model, audio, words, audio_sr=160
     return out_poses
 
 
-def main(checkpoint_path, audio_path, transcript_path):
+def main(checkpoint_path, transcript_path):
     args, generator, loss_fn, lang_model, out_dim = utils.train_utils.load_checkpoint_and_model(
         checkpoint_path, device)
     pprint.pprint(vars(args))
@@ -111,7 +110,6 @@ def main(checkpoint_path, audio_path, transcript_path):
 
     # prepare input
     transcript = SubtitleWrapper(transcript_path).get()
-    audio_raw, audio_sr = librosa.load(audio_path, mono=True, sr=16000, res_type='kaiser_fast')
 
     word_list = []
     for wi in range(len(transcript)):
@@ -124,7 +122,7 @@ def main(checkpoint_path, audio_path, transcript_path):
             word_list.append([word, word_s, word_e])
 
     # inference
-    out_poses = generate_gestures(args, generator, lang_model, audio_raw, word_list)
+    out_poses = generate_gestures(args, generator, lang_model, word_list)
 
     # unnormalize
     mean = np.array(args.data_mean).squeeze()
@@ -133,7 +131,7 @@ def main(checkpoint_path, audio_path, transcript_path):
     out_poses = np.multiply(out_poses, std) + mean
 
     # make a BVH
-    filename_prefix = '{}'.format(audio_path.stem)
+    filename_prefix = '{}'.format(transcript_path.stem)
     make_bvh(save_path, filename_prefix, out_poses)
 
 
@@ -166,8 +164,7 @@ def make_bvh(save_path, filename_prefix, poses):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("ckpt_path", type=Path)
-    parser.add_argument("audio_path", type=Path)
     parser.add_argument("transcript_path", type=Path)
     args = parser.parse_args()
 
-    main(args.ckpt_path, args.audio_path, args.transcript_path)
+    main(args.ckpt_path, args.transcript_path)
