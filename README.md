@@ -35,7 +35,7 @@ You may use [the cache file](https://www.dropbox.com/s/9voiyhcgkg632hc/vocab_cac
     python inference.py [PATH_TO_MODEL] [PATH_TO_AUDIO] [PATH_TO_TRANSCRIPT]
     ```
    We share the model trained on the training set of the GENEA challenge 2020.
-[Click here to download](https://www.dropbox.com/s/ijxjvot1o4s76ww/baseline_icra19_checkpoint_100.bin?dl=0)   
+[Click here to download](https://www.dropbox.com/s/2r19a34a9y5lg75/baseline_icra19_checkpoint_100.bin?dl=0)  
 
 
 ## License
