@@ -2,12 +2,12 @@
 
 This is an implementation of *Robots learn social skills: End-to-end learning of co-speech gesture generation for humanoid robots* ([Paper](https://arxiv.org/abs/1810.12541), [Project Page](https://sites.google.com/view/youngwoo-yoon/projects/co-speech-gesture-generation))
 
-The original paper used TED dataset, but, in this repository, we modified the code to use [Trinity Speech-Gesture Dataset](https://trinityspeechgesture.scss.tcd.ie/) for [GENEA Challenge 2020](https://genea-workshop.github.io/2020/).
+The original paper used TED dataset, but, in this repository, we modified the code to use [Talking With Hands 16.2M](https://github.com/facebookresearch/TalkingWithHands32M) for [GENEA Challenge 2022](https://genea-workshop.github.io/2022/challenge/).
 The model is also changed to estimate rotation matrices for upper-body joints instead of estimating Cartesian coordinates.
   
 
 ## Environment
-The code was developed using python 3.6 on Ubuntu 18.04. Pytorch 1.3.1 was used, but the latest version would be okay. 
+The code was developed using python 3.8 on Ubuntu 18.04. Pytorch 1.5.0 was used.
 
 ## How to run
 
@@ -16,26 +16,34 @@ The code was developed using python 3.6 on Ubuntu 18.04. Pytorch 1.3.1 was used,
     pip install -r requirements.txt
     ```
 
-1. Download the FastText vectors from [here](https://fasttext.cc/docs/en/english-vectors.html) and put `crawl-300d-2M-subword.bin` to the resource folder (`PROJECT_ROOT/resource/crawl-300d-2M-subword.bin`). 
-You may use [the cache file](https://www.dropbox.com/s/9voiyhcgkg632hc/vocab_cache.pkl?dl=0) instead of downloading the FastText vectors (> 5 GB). Put the cache file into the LMDB folder that will be created in the next step. The code automatically loads the cache file when it exists (see `build_vocab` function). 
+2. Download the FastText vectors from [here](https://fasttext.cc/docs/en/english-vectors.html) and put `crawl-300d-2M-subword.bin` to the resource folder (`PROJECT_ROOT/resource/crawl-300d-2M-subword.bin`). 
 
-1. Make LMDB
+3. Make LMDB
     ```
     cd scripts
-    python trinity_data_to_lmdb.py [PATH_TO_TRINITY_DATASET]
+    python twh_dataset_to_lmdb.py [PATH_TO_DATASET]
     ```
 
-1. Update paths and parameters in `PROJECT_ROOT/config/seq2seq.yml` and run `train.py`
+4. Update paths and parameters in `PROJECT_ROOT/config/seq2seq.yml` and run `train.py`
     ```
     python train.py --config=../config/seq2seq.yml
     ```
 
-1. Inference
+5. Inference. Output a BVH motion file from speech text (TSV file).
     ```
-    python inference.py [PATH_TO_MODEL] [PATH_TO_TRANSCRIPT]
+    python inference.py [PATH_TO_MODEL_CHECKPOINT] [PATH_TO_TSV_FILE]
     ```
-   We share the model trained on the training set of the GENEA challenge 2020.
-[Click here to download](https://www.dropbox.com/s/2r19a34a9y5lg75/baseline_icra19_checkpoint_100.bin?dl=0)  
+
+
+## Sample result
+
+TBA
+
+
+## Remarks
+
+* A vocab cache and pretrained model will be available when the full training dataset is released.
+* I found this model was not successful when all the joints were considered, so I trained the model only with upper-body joints excluding fingers and used fixed values for remaining joints (using JointSelector in PyMo). You can easily try a different set of joints (e.g., full-body including fingers) by specifying joint names in `target_joints` variable in `twh_dataset_to_lmdb.py`. Please update `data_mean` and `data_std` in the config file if you change `target_joints`. You can find data mean and std values in the console output of the step 3 (Make LMDB) above.
 
 
 ## License

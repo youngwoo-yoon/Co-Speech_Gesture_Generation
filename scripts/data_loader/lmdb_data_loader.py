@@ -32,7 +32,7 @@ def word_seq_collate_fn(data):
     return word_seq, words_lengths, poses_seq, audio, aux_info
 
 
-class TrinityDataset(Dataset):
+class TwhDataset(Dataset):
     def __init__(self, lmdb_dir, n_poses, subdivision_stride, pose_resampling_fps, data_mean, data_std):
 
         self.lmdb_dir = lmdb_dir
@@ -82,7 +82,10 @@ class TrinityDataset(Dataset):
         pose_seq = (pose_seq - self.data_mean) / std
 
         # to tensors
-        word_seq_tensor = words_to_tensor(self.lang_model, word_seq, aux_info['end_time'])
+        if self.lang_model:
+            word_seq_tensor = words_to_tensor(self.lang_model, word_seq, aux_info['end_time'])
+        else:
+            word_seq_tensor = 0
         pose_seq = torch.from_numpy(pose_seq).reshape((pose_seq.shape[0], -1)).float()
         audio = torch.from_numpy(audio).float()
 

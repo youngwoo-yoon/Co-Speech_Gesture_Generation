@@ -54,7 +54,7 @@ class DataPreprocessor:
         sample_skeletons_list = []
         sample_words_list = []
         sample_audio_list = []
-
+        
         num_subdivision = math.floor(
             (len(clip_skeleton) - self.n_poses)
             / self.subdivision_stride) + 1  # floor((K - (N+M)) / S) + 1
@@ -69,7 +69,9 @@ class DataPreprocessor:
             sample_words = self.get_words_in_time_range(word_list=clip_word_list,
                                                         start_time=subdivision_start_time,
                                                         end_time=subdivision_end_time)
-            if len(sample_words) < 2:
+
+            # filtering
+            if len(sample_words) < 3:
                 continue
 
             # raw audio

@@ -106,7 +106,7 @@ class MocapParameterizer(BaseEstimator, TransformerMixin):
             
             tree_data = {}
 
-            for joint in track.traverse():
+            for joint in joints:
                 parent = track.skeleton[joint]['parent']
                 rot_order = track.skeleton[joint]['order']
 
@@ -289,15 +289,13 @@ class Mirror(BaseEstimator, TransformerMixin):
             
             # List the columns that contain rotation channels
             rots = [c for c in euler_df.columns if ('rotation' in c and 'Nub' not in c)]
-            #lft_rots = [c for c in euler_df.columns if ('Left' in c and 'rotation' in c and 'Nub' not in c)]
-            #rgt_rots = [c for c in euler_df.columns if ('Right' in c and 'rotation' in c and 'Nub' not in c)]
-            lft_joints = (joint for joint in track.skeleton if 'Left' in joint and 'Nub' not in joint)
-            rgt_joints = (joint for joint in track.skeleton if 'Right' in joint and 'Nub' not in joint)
+            lft_joints = (joint for joint in track.skeleton if '_l_' in joint and 'Nub' not in joint)
+            rgt_joints = (joint for joint in track.skeleton if '_r_' in joint and 'Nub' not in joint)
                         
             new_track = track.clone()
 
             for lft_joint in lft_joints:                
-                rgt_joint = lft_joint.replace('Left', 'Right')
+                rgt_joint = lft_joint.replace('_l_', '_r_')
                 
                 # Create the corresponding columns in the new DataFrame                
                 new_df['%s_Xrotation'%lft_joint] = pd.Series(data=signs[0]*track.values['%s_Xrotation'%rgt_joint], index=new_df.index)
@@ -309,7 +307,7 @@ class Mirror(BaseEstimator, TransformerMixin):
                 new_df['%s_Zrotation'%rgt_joint] = pd.Series(data=signs[2]*track.values['%s_Zrotation'%lft_joint], index=new_df.index)
     
             # List the joints that are not left or right, i.e. are on the trunk
-            joints = (joint for joint in track.skeleton if 'Nub' not in joint and 'Left' not in joint and 'Right' not in joint)
+            joints = (joint for joint in track.skeleton if 'Nub' not in joint and '_l_' not in joint and '_r_' not in joint)
 
             for joint in joints:
                 # Create the corresponding columns in the new DataFrame
@@ -343,7 +341,7 @@ class JointSelector(BaseEstimator, TransformerMixin):
         selected_joints.extend(self.joints)
 
         for joint_name in selected_joints:
-            selected_channels.extend([o for o in X[0].values.columns if (joint_name + "_") in o and 'Nub' not in o])
+            selected_channels.extend([o for o in X[0].values.columns if ((joint_name + "_X") in o or (joint_name + "_Y") in o or (joint_name + "_Z") in o) and 'Nub' not in o and 'Null' not in o])
         
         self.selected_joints = selected_joints
         self.selected_channels = selected_channels
@@ -614,6 +612,64 @@ class RootTransformer(BaseEstimator, TransformerMixin):
             Q.append(new_track)
 
         return Q
+
+
+class RootNormalizer(BaseEstimator, TransformerMixin):
+    """
+    Make subjects in TalkingWithHands16.2M face the same direction
+    This class is not for general uses. Only compatible to GENEA 2022 challenge dataset
+    Added by Youngwoo Yoon, April 2022
+    """
+    def __init__(self):
+        pass
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        print("RootNormalizer")
+        Q = []
+
+        for track in X:
+            new_track = track.clone()
+
+            xp_col = '%s_Xposition'%track.root_name
+            yp_col = '%s_Yposition'%track.root_name
+            zp_col = '%s_Zposition'%track.root_name
+
+            xr_col = '%s_Xrotation'%track.root_name
+            yr_col = '%s_Yrotation'%track.root_name
+            zr_col = '%s_Zrotation'%track.root_name
+
+            new_df = track.values.copy()
+
+            all_zeros = np.zeros(track.values[xp_col].values.shape)
+            mean_xp = np.mean(track.values[xp_col].values)
+            mean_yp = np.mean(track.values[yp_col].values)
+            mean_zp = np.mean(track.values[zp_col].values)
+
+            if track.values[xp_col].values[0] < 0:
+                new_yr = np.full(track.values[xp_col].values.shape, -90)
+            else:
+                new_yr = np.full(track.values[xp_col].values.shape, 90)
+
+            new_df[xp_col] = pd.Series(data=track.values[xp_col]-mean_xp, index=new_df.index)
+            new_df[yp_col] = pd.Series(data=track.values[yp_col]-mean_yp, index=new_df.index)
+            new_df[zp_col] = pd.Series(data=track.values[zp_col]-mean_zp, index=new_df.index)
+
+            new_df[xr_col] = pd.Series(data=all_zeros, index=new_df.index)
+            new_df[yr_col] = pd.Series(data=new_yr, index=new_df.index)
+            new_df[zr_col] = pd.Series(data=all_zeros, index=new_df.index)
+
+            new_track.values = new_df
+
+            Q.append(new_track)
+
+        return Q
+
+    def inverse_transform(self, X, copy=None):
+        # NOT IMPLEMENTED
+        return X
 
 
 class RootCentricPositionNormalizer(BaseEstimator, TransformerMixin):

@@ -1,3 +1,4 @@
+import csv
 import json
 import re
 
@@ -5,7 +6,8 @@ import re
 def normalize_string(s):
     """ lowercase, trim, and remove non-letter characters """
     s = s.lower().strip()
-    s = re.sub(r"([,.!?])", r" \1 ", s)  # isolate some marks
+    # s = re.sub(r"([,.!?])", r" \1 ", s)  # isolate some marks
+    s = re.sub(r"([,.!?])", r"", s)  # remove marks
     s = re.sub(r"(['])", r"", s)  # remove apostrophe (i.e., shouldn't --> shouldnt)
     s = re.sub(r"[^a-zA-Z0-9,.!?]+", r" ", s)  # replace other characters with whitespace
     s = re.sub(r"\s+", r" ", s).strip()
@@ -17,21 +19,17 @@ class SubtitleWrapper:
 
     def __init__(self, subtitle_path):
         self.subtitle = []
-        self.load_gentle_subtitle(subtitle_path)
+        self.load_tsv_subtitle(subtitle_path)
 
     def get(self):
         return self.subtitle
 
-    # using gentle lib
-    def load_gentle_subtitle(self, subtitle_path):
+    def load_tsv_subtitle(self, subtitle_path):
         try:
-            with open(subtitle_path) as data_file:
-                data = json.load(data_file)
-                for item in data:
-                    if 'words' in item['alternatives'][0]:
-                        raw_subtitle = item['alternatives'][0]['words']
-                        for word in raw_subtitle:
-                            self.subtitle.append(word)
+            with open(subtitle_path) as file:
+                tsv_file = csv.reader(file, delimiter="\t")
+                for line in tsv_file:
+                    self.subtitle.append(line)
         except FileNotFoundError:
             self.subtitle = None
 

@@ -2,24 +2,22 @@ import argparse
 import math
 import pickle
 import pprint
-from pathlib import Path
-
-import librosa
-import numpy as np
 import time
-
+import os
+import numpy as np
 import torch
-from scipy.signal import savgol_filter
 import joblib as jl
 
+from pathlib import Path
+from scipy.signal import savgol_filter
+from scipy.spatial.transform import Rotation as R
+
 import utils
-from pymo.preprocessing import *
-from pymo.viz_tools import *
-from pymo.writers import *
 from utils.data_utils import SubtitleWrapper, normalize_string
 from utils.train_utils import set_logger
-
 from data_loader.data_preprocessor import DataPreprocessor
+
+from pymo.writers import BVHWriter
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -46,7 +44,7 @@ def generate_gestures(args, pose_decoder, lang_model, words, seed_seq=None):
         num_subdivision = math.ceil((clip_length - unit_time) / stride_time) + 1
 
     print('{}, {}, {}, {}'.format(num_subdivision, unit_time, clip_length, stride_time))
-    num_subdivision = min(num_subdivision, 59)  # DEBUG: generate only for the first N divisions
+    # num_subdivision = min(num_subdivision, 59)  # DEBUG: generate only for the first N divisions
 
     out_poses = None
     start = time.time()
@@ -110,16 +108,20 @@ def main(checkpoint_path, transcript_path):
 
     # prepare input
     transcript = SubtitleWrapper(transcript_path).get()
-
     word_list = []
     for wi in range(len(transcript)):
-        word_s = float(transcript[wi]['start_time'][:-1])
-        word_e = float(transcript[wi]['end_time'][:-1])
-        word = transcript[wi]['word']
+        word_s = float(transcript[wi][0])
+        word_e = float(transcript[wi][1])
+        word = transcript[wi][2].strip()
 
-        word = normalize_string(word)
-        if len(word) > 0:
-            word_list.append([word, word_s, word_e])
+        word_tokens = word.split()
+
+        for t_i, token in enumerate(word_tokens):
+            token = normalize_string(token)
+            if len(token) > 0:
+                new_s_time = word_s + (word_e - word_s) * t_i / len(word_tokens)
+                new_e_time = word_s + (word_e - word_s) * (t_i + 1) / len(word_tokens)
+                word_list.append([token, new_s_time, new_e_time])
 
     # inference
     out_poses = generate_gestures(args, generator, lang_model, word_list)
@@ -147,14 +149,16 @@ def make_bvh(save_path, filename_prefix, poses):
         out_poses[:, i] = savgol_filter(poses[:, i], 15, 2)  # NOTE: smoothing on rotation matrices is not optimal
 
     # rotation matrix to euler angles
-    out_poses = out_poses.reshape((out_poses.shape[0], -1, 9))
-    out_poses = out_poses.reshape((out_poses.shape[0], out_poses.shape[1], 3, 3))
-    out_euler = np.zeros((out_poses.shape[0], out_poses.shape[1] * 3))
+    out_poses = out_poses.reshape((out_poses.shape[0], -1, 12))  # (n_frames, n_joints, 12)
+    out_data = np.zeros((out_poses.shape[0], out_poses.shape[1], 6))
     for i in range(out_poses.shape[0]):  # frames
-        r = R.from_matrix(out_poses[i])
-        out_euler[i] = r.as_euler('ZXY', degrees=True).flatten()
+        for j in range(out_poses.shape[1]):  # joints
+            out_data[i, j, :3] = out_poses[i, j, :3]
+            r = R.from_matrix(out_poses[i, j, 3:].reshape(3, 3))
+            out_data[i, j, 3:] = r.as_euler('ZXY', degrees=True).flatten()
 
-    bvh_data = pipeline.inverse_transform([out_euler])
+    out_data = out_data.reshape(out_data.shape[0], -1)
+    bvh_data = pipeline.inverse_transform([out_data])
 
     out_bvh_path = os.path.join(save_path, filename_prefix + '_generated.bvh')
     with open(out_bvh_path, 'w') as f:

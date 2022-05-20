@@ -19,6 +19,7 @@ from config.parse_args import parse_args
 
 from torch import optim
 
+from twh_dataset_to_lmdb import target_joints
 from data_loader.lmdb_data_loader import *
 import utils.train_utils
 
@@ -152,21 +153,21 @@ def main(config):
     logging.info(pprint.pformat(vars(args)))
 
     # dataset
-    train_dataset = TrinityDataset(args.train_data_path[0],
-                                   n_poses=args.n_poses,
-                                   subdivision_stride=args.subdivision_stride,
-                                   pose_resampling_fps=args.motion_resampling_framerate,
-                                   data_mean=args.data_mean, data_std=args.data_std)
+    train_dataset = TwhDataset(args.train_data_path[0],
+                               n_poses=args.n_poses,
+                               subdivision_stride=args.subdivision_stride,
+                               pose_resampling_fps=args.motion_resampling_framerate,
+                               data_mean=args.data_mean, data_std=args.data_std)
     train_loader = DataLoader(dataset=train_dataset, batch_size=args.batch_size,
                               shuffle=True, drop_last=True, num_workers=args.loader_workers, pin_memory=True,
                               collate_fn=word_seq_collate_fn
                               )
 
-    val_dataset = TrinityDataset(args.val_data_path[0],
-                                 n_poses=args.n_poses,
-                                 subdivision_stride=args.subdivision_stride,
-                                 pose_resampling_fps=args.motion_resampling_framerate,
-                                 data_mean=args.data_mean, data_std=args.data_std)
+    val_dataset = TwhDataset(args.val_data_path[0],
+                             n_poses=args.n_poses,
+                             subdivision_stride=args.subdivision_stride,
+                             pose_resampling_fps=args.motion_resampling_framerate,
+                             data_mean=args.data_mean, data_std=args.data_std)
     test_loader = DataLoader(dataset=val_dataset, batch_size=args.batch_size,
                              shuffle=False, drop_last=True, num_workers=args.loader_workers, pin_memory=True,
                              collate_fn=word_seq_collate_fn
@@ -181,7 +182,7 @@ def main(config):
 
     # train
     train_epochs(args, train_loader, test_loader, lang_model,
-                 pose_dim=15*9, trial_id=trial_id)
+                 pose_dim=len(target_joints)*12, trial_id=trial_id)
 
 
 if __name__ == '__main__':
