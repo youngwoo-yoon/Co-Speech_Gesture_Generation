@@ -30,8 +30,8 @@ def process_bvh(gesture_filename, dump_pipeline=False):
     data_all.append(p.parse(gesture_filename))
 
     data_pipe = Pipeline([
-        ('dwnsampl', DownSampler(tgt_fps=30, keep_all=False)),
-        ('root', RootNormalizer()),
+        # ('dwnsampl', DownSampler(tgt_fps=30, keep_all=False)),
+        # ('root', RootNormalizer()),
         ('jtsel', JointSelector(target_joints, include_root=False)),
         # ('mir', Mirror(axis='X', append=True)),
         ('np', Numpyfier())
@@ -95,7 +95,7 @@ def make_lmdb_gesture_dataset(base_path):
             continue
 
         # load skeletons
-        dump_pipeline = (save_idx == 0)
+        dump_pipeline = (save_idx == 2)  # trn_2022_v1_002 has a good rest finger pose
         # poses, poses_mirror = process_bvh(bvh_file)
         poses = process_bvh(bvh_file, dump_pipeline)
 

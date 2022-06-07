@@ -9,27 +9,35 @@ The model is also changed to estimate rotation matrices for upper-body joints in
 ## Environment
 The code was developed using python 3.8 on Ubuntu 18.04. Pytorch 1.5.0 was used.
 
-## How to run
+## Prepare
 
 1. Install dependencies 
     ```
     pip install -r requirements.txt
     ```
 
-2. Download the FastText vectors from [here](https://fasttext.cc/docs/en/english-vectors.html) and put `crawl-300d-2M-subword.bin` to the resource folder (`PROJECT_ROOT/resource/crawl-300d-2M-subword.bin`). 
+2. Download the FastText vectors from [here](https://fasttext.cc/docs/en/english-vectors.html) and put `crawl-300d-2M-subword.bin` to the resource folder (`resource/crawl-300d-2M-subword.bin`). 
 
-3. Make LMDB
+
+## Train
+
+1. Make LMDB
     ```
     cd scripts
     python twh_dataset_to_lmdb.py [PATH_TO_DATASET]
     ```
 
-4. Update paths and parameters in `PROJECT_ROOT/config/seq2seq.yml` and run `train.py`
+2. Update paths and parameters in `config/seq2seq.yml` and run `train.py`
     ```
     python train.py --config=../config/seq2seq.yml
     ```
 
-5. Inference. Output a BVH motion file from speech text (TSV file).
+## Inference
+
+1. Do training or use a pretrained model (`output/train_seq2seq/baseline_icra19_checkpoint_100.bin`).
+
+
+2. Inference. Output a BVH motion file from speech text (TSV file).
     ```
     python inference.py [PATH_TO_MODEL_CHECKPOINT] [PATH_TO_TSV_FILE]
     ```
@@ -37,7 +45,8 @@ The code was developed using python 3.8 on Ubuntu 18.04. Pytorch 1.5.0 was used.
 
 ## Sample result
 
-TBA
+Result video for `val_2022_v1_006.tsv` by using the challenge visualization server.
+
 
 
 ## Remarks

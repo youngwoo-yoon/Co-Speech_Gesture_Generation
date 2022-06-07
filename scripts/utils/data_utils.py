@@ -4,12 +4,11 @@ import re
 
 
 def normalize_string(s):
-    """ lowercase, trim, and remove non-letter characters """
-    s = s.lower().strip()
+    s = s.lower().strip()  # lower cases, trim whitespaces
     # s = re.sub(r"([,.!?])", r" \1 ", s)  # isolate some marks
     s = re.sub(r"([,.!?])", r"", s)  # remove marks
-    s = re.sub(r"(['])", r"", s)  # remove apostrophe (i.e., shouldn't --> shouldnt)
-    s = re.sub(r"[^a-zA-Z0-9,.!?]+", r" ", s)  # replace other characters with whitespace
+    # s = re.sub(r"(['])", r"", s)  # remove apostrophe (i.e., shouldn't --> shouldnt)
+    # s = re.sub(r"[^a-zA-Z0-9,.!?]+", r" ", s)  # replace non alphanumeric characters with whitespace
     s = re.sub(r"\s+", r" ", s).strip()
     return s
 
