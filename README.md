@@ -47,6 +47,8 @@ The code was developed using python 3.8 on Ubuntu 18.04. Pytorch 1.5.0 was used.
 
 Result video for `val_2022_v1_006.tsv` by using the challenge visualization server.
 
+https://user-images.githubusercontent.com/9062897/172342581-2dd5a529-5de2-438b-9454-48e7b397ed24.mp4
+
 
 
 ## Remarks
