@@ -34,7 +34,7 @@ The code was developed using python 3.8 on Ubuntu 18.04. Pytorch 1.5.0 was used.
 
 ## Inference
 
-1. Do training or use a pretrained model (`output/train_seq2seq/baseline_icra19_checkpoint_100.bin`).
+1. Do training or use a pretrained model (`output/train_seq2seq/baseline_icra19_checkpoint_100.bin`). When you use the pretrained model, please put [vocab_cache.pkl](https://www.dropbox.com/s/fif332qp00e5qly/vocab_cache.pkl?dl=0) file into lmdb train path. 
 
 
 2. Inference. Output a BVH motion file from speech text (TSV file).
@@ -51,7 +51,6 @@ Result video for `val_2022_v1_006.tsv` by using the challenge visualization serv
 
 ## Remarks
 
-* A vocab cache and pretrained model will be available when the full training dataset is released.
 * I found this model was not successful when all the joints were considered, so I trained the model only with upper-body joints excluding fingers and used fixed values for remaining joints (using JointSelector in PyMo). You can easily try a different set of joints (e.g., full-body including fingers) by specifying joint names in `target_joints` variable in `twh_dataset_to_lmdb.py`. Please update `data_mean` and `data_std` in the config file if you change `target_joints`. You can find data mean and std values in the console output of the step 3 (Make LMDB) above.
 
 
