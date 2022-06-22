@@ -14,7 +14,7 @@ librosa==0.9.1
 llvmlite==0.38.0
 lmdb==1.3.0
 numba==0.55.1
-numpy==1.21.6
+numpy==1.22.0
 packaging==21.3
 pandas==1.4.2
 Pillow==9.1.1
